@@ -19,7 +19,7 @@ export default function CoverPage({
   return (
     <section className="relative w-full min-h-screen flex flex-col items-center justify-center bg-[#050505] p-2 sm:p-4 select-none">
       {/* Pristine Brochure Frame - Preserving exact 418 / 598 proportion */}
-      <div className="relative w-full max-w-[560px] aspect-[418/598] flex items-center justify-center">
+      <div className="relative w-full max-w-[540px] max-h-[90vh] aspect-[418/598] flex items-center justify-center">
         {/* Vector-Rendered High-Definition Cover */}
         <Image
           src={brochureData.honoree.photoUrl}
