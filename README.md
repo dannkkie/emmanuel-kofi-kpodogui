@@ -1,36 +1,75 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Emmanuel Kofi Kpodogui
 
-## Getting Started
+A mobile-first web version of the complete 24-page memorial brochure supplied as
+`web-complete.pdf`. The cover, service order, biography, tributes, six galleries,
+hymns, appreciation, and original printed page numbers appear in source order.
+There is no added editorial copy.
 
-First, run the development server:
+## Getting started
 
 ```bash
+npm ci
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [localhost:3000](http://localhost:3000). Scroll through the complete brochure.
+Sections also have stable fragments, including `#order-of-service`, `#biography`,
+`#tribute-wife`, `#tribute-children`, `#gallery`, `#hymns`, and `#appreciation`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Implementation
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `src/app/page.tsx`: the cover and complete brochure assembly.
+- `src/app/brochure-pages.tsx`: semantic, server-rendered interior pages.
+- `src/app/brochure-data.json`: exact extracted text and source page mapping.
+- `src/app/globals.css`: responsive layouts and the original visual styling.
+- `src/app/brochure-fonts.css`: original embedded font subsets, with disjoint
+  Unicode ranges to avoid downloading duplicate character coverage.
+- `src/app/layout.tsx`: metadata, original cover social preview, and font preloads.
+- `public/brochure/`: optimized original artwork, photographs, QR code, and fonts.
 
-## Learn More
+Interior text is at least 17px on phones. Printed columns become a single reading
+column. The photo montages retain their original ordering and crops. Typography,
+floral decoration, and source page numbers are retained.
 
-To learn more about Next.js, take a look at the following resources:
+The route is prerendered. There are no application client components, PDF viewer
+libraries, third-party requests, or external font requests. Native image lazy
+loading and CSS content visibility defer interior images and rendering. AVIF has
+WebP fallbacks; the QR code is encoded losslessly. The full 7.7 MB source PDF is
+not required or downloaded by the site. Text remains readable without JavaScript.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Validation and production
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm run lint
+npm run build
+npm start
+```
 
-## Deploy on Vercel
+Set `NEXT_PUBLIC_SITE_URL` to the deployed origin to override the existing Vercel
+URL used by social metadata.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Source extraction
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The source PDFs are supplied separately. To reproduce the checked-in assets, use
+Python with `pypdf`, `pdfplumber`, and `Pillow` (AVIF/WebP support), plus Poppler's
+`pdftoppm` on your PATH:
+
+```bash
+python scripts/prepare-complete-brochure.py /path/to/web-complete.pdf
+```
+
+The script verifies all visible interior-page characters against the extracted
+content. It preserves punctuation, source repetitions, names, dates, and hymn
+lyrics. It removes only invisible white placeholder letters and coincident
+printing overprints, as checked against rendered pages. Results and the source
+SHA-256 are saved to `public/brochure/complete/source-audit.json`.
+
+The cover extractor remains available separately:
+
+```bash
+python scripts/prepare-brochure.py /path/to/web-brochure.pdf
+```
+
+Font subsets contain only the supplied brochure's characters. For content
+changes, regenerate from an updated source PDF or provide complete fonts. The
+extraction scripts never modify the source PDFs.

@@ -1,26 +1,318 @@
-@import "tailwindcss";
+@font-face {
+  font-family: "Caladea";
+  src: url("/brochure/fonts/caladea-regular.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Cinzel";
+  src: url("/brochure/fonts/cinzel-regular.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Cinzel";
+  src: url("/brochure/fonts/cinzel-bold.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: dark;
+  background: #000;
+  color: #877971;
+  font-family: "Caladea", Georgia, serif;
+  font-synthesis: none;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 280px; }
+p, h1 { margin: 0; }
+
+.brochure {
+  width: min(100%, 840px);
+  margin-inline: auto;
+  container-type: inline-size;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.composition {
+  position: relative;
+  /* Leave room for the original QR code at a useful size on small phones. */
+  height: max(132.8546cqw, calc(113.7477cqw + 98px));
+  overflow: hidden;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.artwork { position: absolute; inset: 0; pointer-events: none; }
+.artwork img { display: block; width: 100%; height: auto; }
+
+.dedication, .rank, .remembrance, .name, .alias, .years {
+  position: absolute;
+  line-height: 1;
+  white-space: nowrap;
+  font-weight: 400;
+}
+
+.dedication {
+  top: calc(6.354cqw - .825em);
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: max(10px, 2.3938cqw);
+  letter-spacing: .662em;
+  text-indent: .662em;
+  font-kerning: none;
+}
+
+.rank {
+  top: calc(92.365cqw - .825em);
+  left: 28.8057%;
+  font-size: 3.5916cqw;
+  color: #ad8330;
+}
+
+.remembrance {
+  top: 91.16cqw;
+  left: 80.53%;
+  width: 10.35%;
+  font-family: "Cinzel", Georgia, serif;
+  font-size: max(8px, 2.1629cqw);
+  font-weight: 700;
+  line-height: 1.382;
+  text-align: center;
+}
+
+.name {
+  top: calc(105.93cqw - .7995em);
+  left: 24.5934%;
+  font-family: "Cinzel", Georgia, serif;
+  font-size: 7.1831cqw;
+  color: #ddc596;
+}
+
+.alias {
+  top: calc(110.179cqw - .7995em);
+  left: 46.068%;
+  transform: translateX(-50%);
+  font-family: "Cinzel", Georgia, serif;
+  font-size: max(11px, 2.3938cqw);
+}
+
+.years {
+  top: calc(117.35cqw - .7995em);
+  left: 46.068%;
+  transform: translateX(-50%);
+  font-family: "Cinzel", Georgia, serif;
+  font-size: 4.7876cqw;
+  letter-spacing: .025em;
+  color: #b48836;
+}
+
+.qr-code {
+  position: absolute;
+  top: 113.7477cqw;
+  right: 5.134%;
+  display: block;
+  width: max(82px, 19.9332cqw);
+  height: auto;
+}
+
+.qr-code img { display: block; width: 100%; height: auto; }
+
+.service {
+  padding: 0 20px max(24px, env(safe-area-inset-bottom));
+  text-align: center;
+  font-size: max(16px, 2.8732cqw);
+  line-height: 1.5;
+  text-wrap: balance;
+}
+
+.service-date { margin-bottom: 3px; }
+.service-date sup { font-size: .6em; line-height: 0; }
+.service-venue { max-width: 36em; margin-inline: auto; }
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (min-width: 600px) {
+  .service { padding-bottom: 12px; }
+  .service-date { transform: translateX(-5.25%); }
+  .service-venue { transform: translateX(-1.15%); }
+}
+
+@media (max-width: 360px) {
+  .dedication { letter-spacing: .5em; text-indent: .5em; }
+}
+
+@media print {
+  :root { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .brochure { width: 100%; max-width: 840px; break-inside: avoid; }
+}
+
+/* Interior pages use the brochure's original type and floral decoration. */
+.brochure-book {
+  max-width: 840px;
+  margin-inline: auto;
+  container-type: inline-size;
+  color: #33333b;
+  font-family: "Brochure-TeXGyreTermes-Regular", "Brochure-NotoSans-Regular", "Times New Roman", serif;
+}
+
+.brochure-sheet {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin-top: 12px;
+  padding: clamp(28px, 4.6cqw, 40px) clamp(22px, 4.3cqw, 36px) 52px;
+  background: #fff;
+  color-scheme: light;
+  font-size: clamp(17px, 2.3938cqw, 20px);
+  line-height: 1.55;
+  scroll-margin-top: 16px;
+  content-visibility: auto;
+  contain-intrinsic-block-size: auto 1100px;
+}
+
+.brochure-sheet::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: clamp(65px, 13cqw, 110px);
+  height: clamp(132px, 26cqw, 222px);
+  background: url("/brochure/complete/floral.webp") top right / 100% auto no-repeat;
+  pointer-events: none;
+}
+
+.sheet-content { position: relative; z-index: 1; }
+.sheet-header { margin-bottom: 30px; }
+.sheet-header h2 {
+  margin: 0 0 20px;
+  color: #877971;
+  font-family: "Brochure-AnastasiaScript", Georgia, serif;
+  font-size: clamp(40px, 9.4cqw, 80px);
+  line-height: 1.12;
+  font-weight: 400;
+  text-align: center;
+  text-wrap: balance;
+}
+.sheet-header h2.long-heading { font-size: clamp(35px, 6.3cqw, 54px); }
+.sheet-subtitle { text-align: center; margin-top: -10px; }
+.sheet-header blockquote {
+  max-width: 95%;
+  margin: 28px auto 0;
+  text-align: center;
+  font-family: "Brochure-TeXGyreTermes-Italic", Georgia, serif;
+  font-size: .82em;
+  line-height: 1.55;
+}
+.sheet-body { display: flow-root; }
+.source-paragraph { margin: 0 0 1.15em; }
+.source-paragraph.clear { clear: both; }
+.source-italic { font-family: "Brochure-TeXGyreTermes-Italic", Georgia, serif; }
+.source-bold, .sheet-body strong {
+  font-family: "Brochure-TeXGyreTermes-Bold", Georgia, serif;
+  font-weight: 400;
+}
+.sheet-body strong { font-family: "Brochure-TeXGyreTermes-BoldItalic", Georgia, serif; }
+.dropcap::first-letter {
+  float: left;
+  margin: .12em 8px 0 0;
+  font-family: "Brochure-AnastasiaScript", Georgia, serif;
+  font-size: 4.1em;
+  line-height: .65;
+  color: #877971;
+}
+.source-list { margin: 0 0 1.15em; padding-left: 1.3em; }
+.source-list li { margin-bottom: .4em; }
+.source-photo { display: block; clear: both; margin: 1.3em auto; }
+.source-photo img { display: block; width: 100%; height: auto; }
+.source-photo--left, .source-photo--right { width: min(85%, 340px); }
+.source-page-number {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 29px;
+  padding: 1px 5px 6px;
+  border-radius: 15px 15px 0 0;
+  background: #ad8d46;
+  color: #ddc596;
+  font-family: "Brochure-CinzelDecorative-Bold", Georgia, serif;
+  font-size: 19px;
+  line-height: 1.2;
+  text-align: center;
+}
+.service-heading { margin: 1.3em 0 .65em; color: #877971; font-size: 1.3em; font-weight: 400; }
+.service-lines p { margin-bottom: .5em; }
+.source-columns { display: grid; gap: 18px; }
+.source-column { min-width: 0; }
+.gallery-caption {
+  display: table;
+  max-width: 100%;
+  margin-top: 28px;
+  padding: 3px 18px;
+  background: #ad8330;
+  color: #ddc596;
+  font-family: "Brochure-TeXGyreTermes-Bold", Georgia, serif;
+  font-size: 1em;
+  line-height: 1.35;
+}
+.brochure-sheet--gallery .source-photo { margin: 0; }
+.brochure-sheet--gallery { contain-intrinsic-block-size: auto 850px; }
+.hymn { margin: 0 0 2em; }
+.hymn h3 { margin: 0 0 1em; font-family: "Brochure-TeXGyreTermes-Bold", Georgia, serif; font-size: 1em; font-weight: 400; }
+.hymn-verse { margin-bottom: 1em; white-space: pre-line; }
+.brochure-sheet--hymns { line-height: 1.5; }
+.brochure-sheet--appreciation {
+  min-height: 143cqw;
+  padding-top: 57cqw;
+  padding-bottom: 35cqw;
+  background: #000;
+  color: #ddc596;
+  text-align: center;
+  overflow: hidden;
+}
+.brochure-sheet--appreciation::before { display: none; }
+.appreciation-art { position: absolute; inset: 0; pointer-events: none; }
+.appreciation-art img { display: block; width: 100%; height: auto; }
+.brochure-sheet--appreciation h2 {
+  font-family: "Brochure-Cinzel-Regular", Georgia, serif;
+  font-size: 7.1cqw;
+  color: #ddc596;
+  margin-bottom: 8cqw;
+}
+.brochure-sheet--appreciation .sheet-header { margin-bottom: 0; }
+.brochure-sheet--appreciation .source-paragraph { margin-bottom: .8em; }
+
+@media (min-width: 600px) {
+  .brochure-sheet { min-height: 143cqw; }
+  .source-photo--right { float: right; width: 38%; margin: .2em 0 1em 24px; }
+  .source-photo--left { float: left; width: 34%; margin: .2em 24px 1em 0; }
+  .source-paragraph, .source-list { text-align: justify; }
+  .source-columns { grid-template-columns: 1fr 1fr; gap: 32px; }
+  .source-column + .source-column { border-left: 1px solid #c7b68f; padding-left: 28px; }
+  .brochure-sheet--service { font-size: 17px; }
+  .brochure-sheet--hymns { font-size: 17px; }
+  .brochure-sheet--appreciation .source-paragraph { text-align: center; }
+}
+
+@media print {
+  .brochure-sheet { margin-top: 0; content-visibility: visible; break-before: page; }
+  .source-columns { grid-template-columns: 1fr 1fr; }
 }
