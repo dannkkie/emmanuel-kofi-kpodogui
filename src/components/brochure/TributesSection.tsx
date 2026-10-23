@@ -1,384 +1,343 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Flame, MessageSquare, Plus, Filter, Sparkles, X, Check } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
-import { brochureData, Tribute } from "@/data/brochureData";
+import React, { useState, useSyncExternalStore } from "react";
+import Image from "next/image";
+import { Flame, Heart, MessageSquarePlus, Send, X, Check } from "lucide-react";
+import { MEMORIAL_DATA, Tribute } from "@/data/brochureData";
 
-export default function TributesSection() {
-  const [selectedFilter, setSelectedFilter] = useState<string>("All");
-  const [tributes, setTributes] = useState<Tribute[]>(brochureData.tributes);
-  const [candleCount, setCandleCount] = useState<number>(184);
-  const [hasLitCandle, setHasLitCandle] = useState<boolean>(false);
-  const [candleToast, setCandleToast] = useState<boolean>(false);
-  const [isTributeModalOpen, setIsTributeModalOpen] = useState<boolean>(false);
+function subscribe(callback: () => void) {
+  if (typeof window === "undefined") return () => {};
+  window.addEventListener("storage", callback);
+  return () => window.removeEventListener("storage", callback);
+}
 
-  // Form state
-  const [authorName, setAuthorName] = useState("");
-  const [roleTitle, setRoleTitle] = useState("");
-  const [relationship, setRelationship] = useState<Tribute["relationship"]>("Church & Friends");
-  const [tributeText, setTributeText] = useState("");
-  const [tributeSubmitted, setTributeSubmitted] = useState(false);
+export const TributesSection: React.FC = () => {
+  const [activeFilter, setActiveFilter] = useState<string>("All");
+  const [leaveModalOpen, setLeaveModalOpen] = useState(false);
+  const [userName, setUserName] = useState("");
+  const [userRelation, setUserRelation] = useState("");
+  const [userMessage, setUserMessage] = useState("");
+  const [submitted, setSubmitted] = useState(false);
 
-  // Load from localStorage safely after mount
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      try {
-        const savedCount = localStorage.getItem("memorial_candle_count");
-        if (savedCount) setCandleCount(parseInt(savedCount, 10));
+  // Sync state from localStorage without cascading renders
+  const candleCount = useSyncExternalStore(
+    subscribe,
+    () => {
+      const saved = localStorage.getItem("memorial_candles_kpodogui");
+      return saved ? Number(saved) : 47;
+    },
+    () => 47
+  );
 
-        const savedLit = localStorage.getItem("memorial_user_lit_candle");
-        if (savedLit === "true") setHasLitCandle(true);
+  const hasLitCandle = useSyncExternalStore(
+    subscribe,
+    () => localStorage.getItem("memorial_has_lit_candle") === "true",
+    () => false
+  );
 
-        const savedTributes = localStorage.getItem("memorial_user_tributes");
-        if (savedTributes) {
-          const parsed = JSON.parse(savedTributes);
-          setTributes([...parsed, ...brochureData.tributes]);
+  const communityTributes = useSyncExternalStore(
+    subscribe,
+    () => {
+      const saved = localStorage.getItem("memorial_community_tributes");
+      if (saved) {
+        try {
+          return JSON.parse(saved) as Tribute[];
+        } catch {
+          return [];
         }
-      } catch {
-        // Ignore localStorage errors
       }
-    }, 0);
-
-    return () => clearTimeout(timer);
-  }, []);
+      return [];
+    },
+    () => [] as Tribute[]
+  );
 
   const handleLightCandle = () => {
+    if (hasLitCandle) return;
     const newCount = candleCount + 1;
-    setCandleCount(newCount);
-    setHasLitCandle(true);
-    setCandleToast(true);
-
     try {
-      localStorage.setItem("memorial_candle_count", newCount.toString());
-      localStorage.setItem("memorial_user_lit_candle", "true");
+      localStorage.setItem("memorial_candles_kpodogui", String(newCount));
+      localStorage.setItem("memorial_has_lit_candle", "true");
+      window.dispatchEvent(new Event("storage"));
     } catch {
-      // Ignore
+      // ignore
     }
-
-    setTimeout(() => {
-      setCandleToast(false);
-    }, 3500);
   };
 
-  const handleTributeSubmit = (e: React.FormEvent) => {
+  const handlePostTribute = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!authorName.trim() || !tributeText.trim()) return;
+    if (!userName.trim() || !userMessage.trim()) return;
 
     const newTribute: Tribute = {
-      id: `user-${Date.now()}`,
-      author: authorName.trim(),
-      relationship,
-      roleTitle: roleTitle.trim() || "Sympathizer",
-      quote: tributeText.length > 70 ? `${tributeText.slice(0, 70)}...` : tributeText,
-      content: tributeText.trim(),
-      date: "October 2026",
+      id: `comm-${Date.now()}`,
+      author: userName.trim(),
+      relation: (userRelation.trim() || "Family") as Tribute["relation"],
+      paragraphs: [userMessage.trim()],
+      signOff: `Remembered with love by ${userName.trim()}`,
     };
 
-    const updated = [newTribute, ...tributes];
-    setTributes(updated);
-    setTributeSubmitted(true);
-
+    const updated = [newTribute, ...communityTributes];
     try {
-      const userCustomOnly = updated.filter((t) => t.id.startsWith("user-"));
-      localStorage.setItem("memorial_user_tributes", JSON.stringify(userCustomOnly));
+      localStorage.setItem("memorial_community_tributes", JSON.stringify(updated));
+      window.dispatchEvent(new Event("storage"));
     } catch {
-      // Ignore
+      // ignore
     }
 
+    setSubmitted(true);
     setTimeout(() => {
-      setTributeSubmitted(false);
-      setIsTributeModalOpen(false);
-      setAuthorName("");
-      setRoleTitle("");
-      setTributeText("");
-    }, 1500);
+      setSubmitted(false);
+      setLeaveModalOpen(false);
+      setUserName("");
+      setUserRelation("");
+      setUserMessage("");
+    }, 1800);
   };
 
-  const filterOptions = [
+  const categories = [
     "All",
-    "Widow & Children",
+    "Wife",
+    "Children",
     "Grandchildren",
-    "Ghana Armed Forces",
-    "Church & Friends",
+    "Family",
+    "In-Laws",
+    "Dzita Welfare",
   ];
 
+  const allTributes = [...communityTributes, ...MEMORIAL_DATA.tributes];
+
   const filteredTributes =
-    selectedFilter === "All"
-      ? tributes
-      : tributes.filter((t) => t.relationship === selectedFilter);
+    activeFilter === "All"
+      ? allTributes
+      : allTributes.filter((t) => t.relation.toLowerCase() === activeFilter.toLowerCase());
 
   return (
-    <div className="w-full flex flex-col p-4 space-y-6">
-      {/* Section Header */}
-      <div className="text-center space-y-1.5 border-b border-[#DEC596]/15 pb-4">
-        <span className="text-[10px] tracking-[0.3em] uppercase text-[#B48836] font-cinzel">
-          Reflections of Love & Honour
+    <div className="w-full max-w-[430px] mx-auto px-4 py-6 space-y-8 animate-in fade-in duration-300">
+      {/* Header Banner */}
+      <div className="text-center space-y-1">
+        <span className="text-[10px] uppercase font-cinzel tracking-[0.3em] text-[#877971]">
+          Eulogies & Reflections
         </span>
-        <h2 className="font-cinzel text-xl font-bold text-[#DEC596] tracking-wide">
-          Tributes & Condolences
+        <h2 className="text-2xl font-cinzel font-bold text-[#DEC596] tracking-wide">
+          Tributes
         </h2>
-        <p className="text-xs text-[#877971] font-caladea max-w-xs mx-auto">
-          Words from family, Ghana Armed Forces comrades, church brethren, and loved ones.
-        </p>
+        <div className="w-16 h-[1px] bg-gradient-to-r from-transparent via-[#DEC596]/60 to-transparent mx-auto mt-2" />
       </div>
 
-      {/* Interactive Light A Candle Component */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-[#1A160F] to-[#0D0B08] border border-[#B48836]/35 p-5 text-center shadow-lg">
-        {/* Warm Glow Background */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(222,197,150,0.15)_0%,transparent_70%)] pointer-events-none" />
-
-        <div className="relative z-10 flex flex-col items-center space-y-3">
-          {/* Animated Flame Icon */}
-          <div className="relative">
-            <motion.div
-              animate={{
-                scale: [1, 1.08, 0.96, 1.04, 1],
-                filter: [
-                  "drop-shadow(0 0 12px rgba(245,190,80,0.8))",
-                  "drop-shadow(0 0 20px rgba(245,190,80,1))",
-                  "drop-shadow(0 0 12px rgba(245,190,80,0.8))",
-                ],
-              }}
-              transition={{ repeat: Infinity, duration: 2.2, ease: "easeInOut" }}
-              className="w-12 h-12 rounded-full bg-[#2A1F10] border border-[#B48836]/50 flex items-center justify-center text-[#F5C452]"
-            >
-              <Flame className="w-6 h-6 fill-[#F5C452] text-[#F5C452]" />
-            </motion.div>
+      {/* Light a Candle & Leave Tribute Action Bar */}
+      <div className="rounded-2xl bg-gradient-to-b from-[#161616] to-[#0c0c0c] border border-[#DEC596]/30 p-4 shadow-xl flex items-center justify-between gap-3">
+        {/* Virtual Candle Button */}
+        <button
+          onClick={handleLightCandle}
+          disabled={hasLitCandle}
+          className={`flex-1 flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
+            hasLitCandle
+              ? "bg-[#B48836]/15 border-[#DEC596]/40 cursor-default"
+              : "bg-[#1f1f1f] border-white/10 hover:border-[#DEC596]/40 active:scale-95"
+          }`}
+        >
+          <div className="relative w-8 h-8 flex items-center justify-center shrink-0">
+            <Flame
+              className={`w-6 h-6 transition-all ${
+                hasLitCandle
+                  ? "text-amber-400 fill-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.8)]"
+                  : "text-[#877971]"
+              }`}
+            />
           </div>
-
           <div>
-            <div className="text-xl font-cinzel font-bold text-[#DEC596]">
-              {candleCount.toLocaleString()} Candles Lit
-            </div>
-            <p className="text-xs text-[#877971] mt-0.5">
-              Light a virtual memorial candle in remembrance of Ex-WO1 Kpodogui
-            </p>
+            <span className="block text-[11px] font-cinzel font-bold text-[#DEC596]">
+              {hasLitCandle ? "Candle Lit for Ago Die" : "Light a Candle"}
+            </span>
+            <span className="text-[10px] text-[#877971]">
+              {candleCount} {candleCount === 1 ? "candle" : "candles"} lit in honor
+            </span>
           </div>
+        </button>
 
+        {/* Leave Tribute Button */}
+        <button
+          onClick={() => setLeaveModalOpen(true)}
+          className="p-3 rounded-xl bg-[#1f1f1f] hover:bg-[#282828] border border-[#DEC596]/30 text-[#DEC596] hover:text-white transition-all flex flex-col items-center justify-center shrink-0 active:scale-95"
+          title="Leave a tribute"
+        >
+          <MessageSquarePlus className="w-4 h-4 text-[#B48836]" />
+          <span className="text-[9px] uppercase font-cinzel tracking-wider mt-1">
+            Write
+          </span>
+        </button>
+      </div>
+
+      {/* Filter Tabs */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+        {categories.map((cat) => (
           <button
-            onClick={handleLightCandle}
-            disabled={hasLitCandle}
-            className={`flex items-center justify-center gap-2 px-5 py-2.5 rounded-full font-cinzel text-xs font-semibold tracking-wider transition-all shadow-md ${
-              hasLitCandle
-                ? "bg-[#2A2315] text-[#DEC596] border border-[#B48836]/30 cursor-default"
-                : "bg-gradient-to-r from-[#B48836] via-[#DEC596] to-[#AD8330] text-black hover:brightness-110 active:scale-95"
+            key={cat}
+            onClick={() => setActiveFilter(cat)}
+            className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-cinzel transition-all ${
+              activeFilter === cat
+                ? "bg-[#B48836] text-[#050505] font-bold shadow-md"
+                : "bg-[#141414] text-[#877971] hover:text-[#DEC596] border border-white/5"
             }`}
           >
-            <Flame className="w-3.5 h-3.5" />
-            <span>{hasLitCandle ? "You Have Lit a Candle" : "Light a Candle"}</span>
+            {cat}
           </button>
-        </div>
-
-        {/* Temporary Toast Notification */}
-        <AnimatePresence>
-          {candleToast && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="absolute bottom-2 left-4 right-4 bg-black/95 border border-[#DEC596]/40 py-1.5 px-3 rounded-lg text-xs text-[#DEC596] shadow-xl flex items-center justify-center gap-1.5"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-[#B48836]" />
-              <span>Your candle has been lit in loving memory of Ago Die.</span>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* Filter Tabs & "Leave Tribute" CTA */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-xs text-[#877971]">
-            <Filter className="w-3.5 h-3.5" />
-            <span>Filter by:</span>
-          </div>
-
-          <button
-            onClick={() => setIsTributeModalOpen(true)}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#1A1813] border border-[#DEC596]/30 text-[#DEC596] text-xs font-cinzel hover:bg-[#25221B] active:scale-95 transition-all"
-          >
-            <Plus className="w-3.5 h-3.5 text-[#B48836]" />
-            <span>Leave a Tribute</span>
-          </button>
-        </div>
-
-        {/* Scrollable Filter Chips */}
-        <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-          {filterOptions.map((opt) => (
-            <button
-              key={opt}
-              onClick={() => setSelectedFilter(opt)}
-              className={`px-3 py-1.5 rounded-full text-xs whitespace-nowrap transition-all ${
-                selectedFilter === opt
-                  ? "bg-[#DEC596] text-black font-semibold shadow-sm"
-                  : "bg-[#121212] border border-white/5 text-[#877971] hover:text-[#DEC596]"
-              }`}
-            >
-              {opt}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Tribute Cards List */}
-      <div className="space-y-4">
-        {filteredTributes.map((tribute) => (
-          <div
-            key={tribute.id}
-            className="p-5 rounded-2xl bg-[#0D0D0D] border border-[#DEC596]/15 space-y-3 shadow-md"
-          >
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <h4 className="font-cinzel text-sm font-bold text-[#DEC596]">
-                  {tribute.author}
-                </h4>
-                {tribute.roleTitle && (
-                  <span className="text-[11px] text-[#B48836] font-medium block">
-                    {tribute.roleTitle}
-                  </span>
-                )}
-              </div>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-[#877971] shrink-0">
-                {tribute.relationship}
-              </span>
-            </div>
-
-            {tribute.quote && (
-              <div className="p-3 rounded-xl bg-black/40 border-l-2 border-[#DEC596]/50 text-xs text-[#DEC596]/90 italic font-caladea">
-                &ldquo;{tribute.quote}&rdquo;
-              </div>
-            )}
-
-            <p className="text-xs sm:text-sm text-[#A89F96] font-caladea leading-relaxed whitespace-pre-line">
-              {tribute.content}
-            </p>
-
-            {tribute.date && (
-              <div className="text-[10px] text-[#877971] text-right font-mono">
-                {tribute.date}
-              </div>
-            )}
-          </div>
         ))}
       </div>
 
-      {/* Leave a Tribute Drawer / Modal */}
-      <AnimatePresence>
-        {isTributeModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsTributeModalOpen(false)}
-              className="absolute inset-0 bg-black/85 backdrop-blur-md"
-            />
-
-            <motion.div
-              initial={{ opacity: 0, y: 100 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 100 }}
-              transition={{ type: "spring", damping: 25, stiffness: 280 }}
-              className="relative w-full max-w-md max-h-[90vh] rounded-t-3xl sm:rounded-2xl bg-[#0A0A0A] border border-[#DEC596]/30 flex flex-col shadow-2xl z-10 overflow-hidden"
-            >
-              <div className="p-5 border-b border-[#DEC596]/15 flex items-center justify-between bg-[#121212]">
-                <div className="flex items-center gap-2 text-[#DEC596]">
-                  <MessageSquare className="w-4 h-4 text-[#B48836]" />
-                  <h3 className="font-cinzel text-base font-bold">Leave a Tribute</h3>
-                </div>
-                <button
-                  onClick={() => setIsTributeModalOpen(false)}
-                  className="rounded-full p-1.5 text-[#877971] hover:text-[#DEC596] bg-white/5"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+      {/* Tributes List */}
+      <div className="space-y-6">
+        {filteredTributes.map((tribute) => (
+          <article
+            key={tribute.id}
+            className="rounded-2xl bg-[#0c0c0c] border border-[#DEC596]/20 p-5 shadow-lg space-y-3 relative overflow-hidden"
+          >
+            <div className="flex items-start justify-between border-b border-[#DEC596]/15 pb-2">
+              <div>
+                <span className="text-[10px] uppercase font-cinzel font-semibold tracking-wider text-[#B48836] bg-[#B48836]/10 px-2 py-0.5 rounded">
+                  {tribute.relation}
+                </span>
+                <h3 className="text-base font-cinzel font-bold text-[#DEC596] mt-1">
+                  Tribute by {tribute.author}
+                </h3>
               </div>
+              <Heart className="w-4 h-4 text-[#B48836]/60 shrink-0 mt-1" />
+            </div>
 
-              {tributeSubmitted ? (
-                <div className="p-8 text-center space-y-3">
-                  <div className="w-12 h-12 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 mx-auto flex items-center justify-center">
-                    <Check className="w-6 h-6" />
-                  </div>
-                  <h4 className="font-cinzel text-base font-bold text-[#DEC596]">
-                    Thank You for Your Condolence
-                  </h4>
-                  <p className="text-xs text-[#877971]">
-                    Your tribute in honour of Ex-WO1 Emmanuel Kofi Kpodogui has been recorded.
-                  </p>
+            {/* Scripture Header if present */}
+            {tribute.scripture && (
+              <blockquote className="p-3 rounded-xl bg-[#141414] border-l-2 border-[#DEC596]/50 text-xs italic font-caladea text-[#877971] leading-relaxed">
+                {tribute.scripture}
+              </blockquote>
+            )}
+
+            {/* Photo if present */}
+            {tribute.image && (
+              <div className="relative w-full h-44 rounded-xl overflow-hidden border border-[#DEC596]/20 my-2">
+                <Image
+                  src={tribute.image}
+                  alt={`Tribute image - ${tribute.author}`}
+                  fill
+                  sizes="(max-width: 430px) 100vw, 430px"
+                  className="object-cover object-top"
+                />
+              </div>
+            )}
+
+            {/* Paragraphs */}
+            <div className="space-y-3 pt-1">
+              {tribute.paragraphs.map((para, pIdx) => (
+                <p
+                  key={pIdx}
+                  className="text-[13px] font-caladea text-[#cccccc] leading-relaxed"
+                >
+                  {para}
+                </p>
+              ))}
+            </div>
+
+            {/* Sign Off */}
+            {tribute.signOff && (
+              <div className="pt-2 border-t border-white/5 text-xs font-caladea italic text-[#DEC596]/90">
+                {tribute.signOff}
+              </div>
+            )}
+          </article>
+        ))}
+      </div>
+
+      {/* Leave Tribute Modal Drawer */}
+      {leaveModalOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200"
+          onClick={() => setLeaveModalOpen(false)}
+        >
+          <div
+            className="relative w-full max-w-sm rounded-2xl bg-[#0c0c0c] border border-[#DEC596]/30 p-6 shadow-2xl text-left"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setLeaveModalOpen(false)}
+              className="absolute top-4 right-4 p-2 text-[#877971] hover:text-[#DEC596] rounded-full transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <h3 className="text-base font-cinzel font-bold text-[#DEC596] mb-1">
+              Leave a Memorial Tribute
+            </h3>
+            <p className="text-xs text-[#877971] mb-4">
+              Your words of condolence and tribute will appear on this memorial page.
+            </p>
+
+            {submitted ? (
+              <div className="py-8 text-center space-y-2">
+                <div className="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 mx-auto flex items-center justify-center">
+                  <Check className="w-6 h-6" />
                 </div>
-              ) : (
-                <form onSubmit={handleTributeSubmit} className="p-5 space-y-4 overflow-y-auto">
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-cinzel uppercase text-[#DEC596] block">
-                      Your Full Name *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Sgt. Kwame Mensah / Auntie Faustina"
-                      value={authorName}
-                      onChange={(e) => setAuthorName(e.target.value)}
-                      className="w-full px-3 py-2.5 rounded-xl bg-[#141414] border border-[#DEC596]/20 text-xs text-white placeholder-[#877971]/50 focus:outline-none focus:border-[#DEC596]"
-                    />
-                  </div>
+                <h4 className="text-sm font-cinzel font-bold text-[#ededed]">
+                  Tribute Published
+                </h4>
+                <p className="text-xs text-[#877971]">
+                  Thank you for honoring Ex-WO1 Emmanuel Kofi Kpodogui.
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handlePostTribute} className="space-y-3">
+                <div>
+                  <label className="block text-[11px] font-cinzel uppercase text-[#877971] mb-1">
+                    Your Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={userName}
+                    onChange={(e) => setUserName(e.target.value)}
+                    placeholder="e.g. Kwame Mensah"
+                    className="w-full px-3 py-2 rounded-xl bg-[#141414] border border-[#DEC596]/20 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-[#DEC596]"
+                  />
+                </div>
 
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-cinzel uppercase text-[#DEC596] block">
-                      Title or Role (Optional)
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. GAF Veteran / Family Friend / Niece"
-                      value={roleTitle}
-                      onChange={(e) => setRoleTitle(e.target.value)}
-                      className="w-full px-3 py-2.5 rounded-xl bg-[#141414] border border-[#DEC596]/20 text-xs text-white placeholder-[#877971]/50 focus:outline-none focus:border-[#DEC596]"
-                    />
-                  </div>
+                <div>
+                  <label className="block text-[11px] font-cinzel uppercase text-[#877971] mb-1">
+                    Relationship
+                  </label>
+                  <input
+                    type="text"
+                    value={userRelation}
+                    onChange={(e) => setUserRelation(e.target.value)}
+                    placeholder="e.g. Friend / Air Force Colleague / In-Law"
+                    className="w-full px-3 py-2 rounded-xl bg-[#141414] border border-[#DEC596]/20 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-[#DEC596]"
+                  />
+                </div>
 
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-cinzel uppercase text-[#DEC596] block">
-                      Relationship / Category
-                    </label>
-                    <select
-                      value={relationship}
-                      onChange={(e) => setRelationship(e.target.value as Tribute["relationship"])}
-                      className="w-full px-3 py-2.5 rounded-xl bg-[#141414] border border-[#DEC596]/20 text-xs text-white focus:outline-none focus:border-[#DEC596]"
-                    >
-                      <option value="Church & Friends">Church & Friends</option>
-                      <option value="Ghana Armed Forces">Ghana Armed Forces / Military Colleague</option>
-                      <option value="Family">Family / Extended Relative</option>
-                      <option value="Widow & Children">Widow & Children</option>
-                      <option value="Grandchildren">Grandchildren</option>
-                    </select>
-                  </div>
+                <div>
+                  <label className="block text-[11px] font-cinzel uppercase text-[#877971] mb-1">
+                    Your Tribute / Memory *
+                  </label>
+                  <textarea
+                    required
+                    rows={4}
+                    value={userMessage}
+                    onChange={(e) => setUserMessage(e.target.value)}
+                    placeholder="Share your heartfelt message or memory of Ago Die..."
+                    className="w-full px-3 py-2 rounded-xl bg-[#141414] border border-[#DEC596]/20 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-[#DEC596] resize-none"
+                  />
+                </div>
 
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-cinzel uppercase text-[#DEC596] block">
-                      Your Tribute Message *
-                    </label>
-                    <textarea
-                      required
-                      rows={4}
-                      placeholder="Share a cherished memory, prayer, or farewell message..."
-                      value={tributeText}
-                      onChange={(e) => setTributeText(e.target.value)}
-                      className="w-full px-3 py-2.5 rounded-xl bg-[#141414] border border-[#DEC596]/20 text-xs text-white placeholder-[#877971]/50 focus:outline-none focus:border-[#DEC596]"
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="w-full py-3 rounded-xl bg-gradient-to-r from-[#B48836] via-[#DEC596] to-[#AD8330] text-black font-semibold text-xs tracking-wider uppercase font-cinzel shadow-lg hover:brightness-110 active:scale-[0.98] transition-all"
-                  >
-                    Post Condolence Tribute
-                  </button>
-                </form>
-              )}
-            </motion.div>
+                <button
+                  type="submit"
+                  className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-[#B48836] to-[#DEC596] text-[#050505] font-semibold text-xs tracking-wider uppercase transition-transform active:scale-95 shadow-md hover:brightness-110"
+                >
+                  <Send className="w-4 h-4" />
+                  Publish Tribute
+                </button>
+              </form>
+            )}
           </div>
-        )}
-      </AnimatePresence>
+        </div>
+      )}
     </div>
   );
-}
+};

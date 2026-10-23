@@ -1,27 +1,17 @@
 @import "tailwindcss";
 
-@theme inline {
-  --font-cinzel: var(--font-cinzel);
-  --font-caladea: var(--font-caladea);
-  --font-script: var(--font-script);
-  --font-sans: var(--font-sans);
+@layer base {
+  :root {
+    --font-cinzel: "Cinzel", Georgia, serif;
+    --font-caladea: "Caladea", serif;
+    --font-great-vibes: "Great Vibes", cursive;
 
-  --color-memorial-bg: #050505;
-  --color-memorial-champagne: #DEC596;
-  --color-memorial-gold: #B48836;
-  --color-memorial-antique: #AD8330;
-  --color-memorial-taupe: #877971;
-}
-
-:root {
-  --background: #050505;
-  --foreground: #DEC596;
-}
-
-body {
-  background-color: #050505;
-  color: #DEC596;
-  font-family: var(--font-caladea), Georgia, serif;
+    --color-gold-champagne: #DEC596;
+    --color-gold-metallic: #B48836;
+    --color-gold-antique: #AD8330;
+    --color-stone-taupe: #877971;
+    --color-brochure-dark: #050505;
+  }
 }
 
 .font-cinzel {
@@ -33,31 +23,45 @@ body {
 }
 
 .font-script {
-  font-family: var(--font-script), cursive;
+  font-family: var(--font-great-vibes), cursive;
 }
 
-.gold-gradient-text {
+/* Metallic Gold Text Gradients */
+.text-gold-gradient {
   background: linear-gradient(180deg, #F4E0A6 0%, #C59B38 50%, #8F6818 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-.gold-radial-spotlight {
-  background: radial-gradient(circle at 38% 28%, rgba(180, 136, 54, 0.28) 0%, rgba(5, 5, 5, 0) 65%);
+.text-gold-shimmer {
+  background: linear-gradient(120deg, #DEC596 0%, #FFF3D6 40%, #DEC596 70%, #B48836 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-/* Custom scrollbar for mobile drawers & modals */
+/* Gold border gradient */
+.border-gold-glow {
+  border-color: rgba(222, 197, 150, 0.25);
+  box-shadow: 0 0 25px rgba(180, 136, 54, 0.12);
+}
+
+/* Custom discreet scrollbar */
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
   background: #050505;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(222, 197, 150, 0.25);
+  background: rgba(222, 197, 150, 0.2);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(222, 197, 150, 0.45);
+  background: rgba(222, 197, 150, 0.4);
+}
+
+/* Safe area support for notched phones */
+.pb-safe {
+  padding-bottom: max(1.25rem, env(safe-area-inset-bottom));
 }
