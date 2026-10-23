@@ -32,6 +32,23 @@ type BrochurePage = {
 
 const pages: BrochurePage[] = brochureData;
 const widths = [480, 840, 1260];
+const hymnTitles = new Set(
+  pages.flatMap((page) => page.columns?.flat() || [])
+    .filter((block) => block.kind === "hymn")
+    .map((block) => block.title)
+);
+
+function hymnId(title: string) {
+  return `hymn-${title.toLowerCase().replace(/\s+/g, "-")}`;
+}
+
+function ServiceLine({ text }: { text: string }) {
+  return text.split(/((?:MHB|PHB) \d+)/g).map((part, index) =>
+    hymnTitles.has(part)
+      ? <a className="hymn-link" href={`#${hymnId(part)}`} key={index}>{part}</a>
+      : part
+  );
+}
 
 function sources(name: string, format: string) {
   return widths.map((width) => `/brochure/complete/${name}-${width}.${format} ${width}w`).join(", ");
@@ -63,7 +80,7 @@ function Emphasis({ text, phrases }: { text: string; phrases?: string[] }) {
   let pieces: ReactNode[] = [text];
   for (const phrase of phrases || []) {
     if (!phrase) continue;
-    pieces = pieces.flatMap((piece, index) => {
+    pieces = pieces.flatMap<ReactNode>((piece, index) => {
       if (typeof piece !== "string" || !piece.includes(phrase)) return [piece];
       return piece.split(phrase).flatMap((part, partIndex) =>
         partIndex === 0 ? [part] : [<strong key={`${phrase}-${index}-${partIndex}`}>{phrase}</strong>, part]
@@ -80,12 +97,12 @@ function ContentBlock({ block, gallery }: { block: Block; gallery?: boolean }) {
     case "heading":
       return <h3 className="service-heading">{block.text}</h3>;
     case "lines":
-      return <div className="service-lines">{block.items?.map((item, i) => <p key={i}>{item}</p>)}</div>;
+      return <div className="service-lines">{block.items?.map((item, i) => <p key={i}><ServiceLine text={item} /></p>)}</div>;
     case "list":
       return <ul className="source-list">{block.items?.map((item, i) => <li key={i}>{item}</li>)}</ul>;
     case "hymn":
       return (
-        <section className="hymn" aria-label={block.title}>
+        <section className="hymn" id={hymnId(block.title!)} aria-label={block.title} tabIndex={-1}>
           <h3>{block.title}</h3>
           {block.verses?.map((verse, i) => <p className="hymn-verse" key={i}>{verse}</p>)}
         </section>

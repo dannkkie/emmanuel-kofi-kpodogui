@@ -4,6 +4,8 @@ A mobile-first web version of the complete 24-page memorial brochure supplied as
 `web-complete.pdf`. The cover, service order, biography, tributes, six galleries,
 hymns, appreciation, and original printed page numbers appear in source order.
 There is no added editorial copy.
+The QR code is omitted from the web cover because it links to this app; the
+original PDF remains unchanged.
 
 ## Getting started
 
@@ -15,11 +17,17 @@ npm run dev
 Open [localhost:3000](http://localhost:3000). Scroll through the complete brochure.
 Sections also have stable fragments, including `#order-of-service`, `#biography`,
 `#tribute-wife`, `#tribute-children`, `#gallery`, `#hymns`, and `#appreciation`.
+Hymn references in the service order link directly to their lyrics using native
+anchors that work without JavaScript. A floating back-to-top control appears
+after scrolling and hides again when the reader returns to the top.
+The cover and back-to-top control fade gently, and a linked hymn heading briefly
+highlights. These CSS effects run only when reduced motion is not requested.
 
 ## Implementation
 
 - `src/app/page.tsx`: the cover and complete brochure assembly.
 - `src/app/brochure-pages.tsx`: semantic, server-rendered interior pages.
+- `src/app/back-to-top.tsx`: a small client component for scroll-aware visibility.
 - `src/app/brochure-data.json`: exact extracted text and source page mapping.
 - `src/app/globals.css`: responsive layouts and the original visual styling.
 - `src/app/brochure-fonts.css`: original embedded font subsets, with disjoint
@@ -31,10 +39,11 @@ Interior text is at least 17px on phones. Printed columns become a single readin
 column. The photo montages retain their original ordering and crops. Typography,
 floral decoration, and source page numbers are retained.
 
-The route is prerendered. There are no application client components, PDF viewer
-libraries, third-party requests, or external font requests. Native image lazy
+The route is prerendered, with a small client component for the back-to-top
+control. There are no PDF viewer libraries, third-party requests, or external
+font requests. Native image lazy
 loading and CSS content visibility defer interior images and rendering. AVIF has
-WebP fallbacks; the QR code is encoded losslessly. The full 7.7 MB source PDF is
+WebP fallbacks. The full 7.7 MB source PDF is
 not required or downloaded by the site. Text remains readable without JavaScript.
 
 ## Validation and production

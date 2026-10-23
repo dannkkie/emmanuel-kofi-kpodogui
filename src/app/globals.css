@@ -30,7 +30,10 @@
   font-synthesis: none;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  scrollbar-width: none;
 }
+
+:root::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
 
 * { box-sizing: border-box; }
 body { margin: 0; min-width: 280px; }
@@ -44,8 +47,7 @@ p, h1 { margin: 0; }
 
 .composition {
   position: relative;
-  /* Leave room for the original QR code at a useful size on small phones. */
-  height: max(132.8546cqw, calc(113.7477cqw + 98px));
+  height: 122cqw;
   overflow: hidden;
 }
 
@@ -112,17 +114,6 @@ p, h1 { margin: 0; }
   letter-spacing: .025em;
   color: #b48836;
 }
-
-.qr-code {
-  position: absolute;
-  top: 113.7477cqw;
-  right: 5.134%;
-  display: block;
-  width: max(82px, 19.9332cqw);
-  height: auto;
-}
-
-.qr-code img { display: block; width: 100%; height: auto; }
 
 .service {
   padding: 0 20px max(24px, env(safe-area-inset-bottom));
@@ -260,6 +251,42 @@ p, h1 { margin: 0; }
 }
 .service-heading { margin: 1.3em 0 .65em; color: #877971; font-size: 1.3em; font-weight: 400; }
 .service-lines p { margin-bottom: .5em; }
+.hymn-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding-inline: 4px;
+  margin-inline: -4px;
+  color: #78591f;
+  text-decoration: underline;
+  text-underline-offset: .18em;
+  text-decoration-thickness: 1px;
+}
+.hymn-link:hover { color: #3f2c0c; text-decoration-thickness: 2px; }
+.hymn-link:focus-visible, .back-to-top:focus-visible {
+  outline: 3px solid #ad8330;
+  outline-offset: 4px;
+}
+.back-to-top {
+  position: fixed;
+  z-index: 10;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: max(16px, env(safe-area-inset-bottom));
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: 1px solid #ad8330;
+  border-radius: 50%;
+  background: #181511;
+  color: #ddc596;
+  box-shadow: 0 3px 12px #0004;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.back-to-top[data-visible="true"] { opacity: 1; visibility: visible; pointer-events: auto; }
+.back-to-top:hover { background: #34291a; }
 .source-columns { display: grid; gap: 18px; }
 .source-column { min-width: 0; }
 .gallery-caption {
@@ -275,7 +302,8 @@ p, h1 { margin: 0; }
 }
 .brochure-sheet--gallery .source-photo { margin: 0; }
 .brochure-sheet--gallery { contain-intrinsic-block-size: auto 850px; }
-.hymn { margin: 0 0 2em; }
+.hymn { margin: 0 0 2em; scroll-margin-top: 24px; }
+.hymn:target h3 { color: #78591f; text-decoration: underline; text-underline-offset: .2em; }
 .hymn h3 { margin: 0 0 1em; font-family: "Brochure-TeXGyreTermes-Bold", Georgia, serif; font-size: 1em; font-weight: 400; }
 .hymn-verse { margin-bottom: 1em; white-space: pre-line; }
 .brochure-sheet--hymns { line-height: 1.5; }
@@ -300,6 +328,23 @@ p, h1 { margin: 0; }
 .brochure-sheet--appreciation .sheet-header { margin-bottom: 0; }
 .brochure-sheet--appreciation .source-paragraph { margin-bottom: .8em; }
 
+@keyframes cover-reveal {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes hymn-highlight {
+  0%, 20% { background-color: #f2e6c9; }
+  100% { background-color: transparent; }
+}
+
+@media screen and (prefers-reduced-motion: no-preference) {
+  .cover { animation: cover-reveal 400ms ease-out; }
+  .back-to-top { transition: opacity 160ms ease-out, visibility 0s linear 160ms; }
+  .back-to-top[data-visible="true"] { transition-delay: 0s; }
+  .hymn:target h3 { animation: hymn-highlight 1200ms ease-out; }
+}
+
 @media (min-width: 600px) {
   .brochure-sheet { min-height: 143cqw; }
   .source-photo--right { float: right; width: 38%; margin: .2em 0 1em 24px; }
@@ -313,6 +358,8 @@ p, h1 { margin: 0; }
 }
 
 @media print {
+  .back-to-top { display: none; }
+  .hymn-link { color: inherit; text-decoration: none; min-height: 0; }
   .brochure-sheet { margin-top: 0; content-visibility: visible; break-before: page; }
   .source-columns { grid-template-columns: 1fr 1fr; }
 }

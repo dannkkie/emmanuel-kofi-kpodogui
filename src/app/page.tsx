@@ -1,4 +1,5 @@
 import BrochurePages from "./brochure-pages";
+import BackToTop from "./back-to-top";
 
 /* The artwork contains the portrait and original gold signature only.
  * All brochure copy is rendered as real, selectable text below. */
@@ -13,7 +14,7 @@ function artworkSources(format: "avif" | "webp") {
 export default function Home() {
   return (
     <main aria-labelledby="memorial-name">
-      <section className="brochure cover" data-source-page="1" aria-labelledby="memorial-name">
+      <section id="top" className="brochure cover" data-source-page="1" aria-labelledby="memorial-name" tabIndex={-1}>
       <div className="composition">
         <picture className="artwork">
           <source type="image/avif" srcSet={artworkSources("avif")} sizes="(max-width: 840px) 100vw, 840px" />
@@ -30,12 +31,6 @@ export default function Home() {
         </h1>
         <p className="alias">A. K. A “Ago Die”</p>
         <p className="years">1954 - 2026</p>
-
-        {/* Preserve every QR pixel; lossy compression can damage the code. */}
-        <picture className="qr-code">
-          <source type="image/webp" srcSet="/brochure/qr.webp" />
-          <img src="/brochure/qr.png" width="237" height="237" alt="Graphical QR code" decoding="async" />
-        </picture>
       </div>
 
       <footer className="service">
@@ -48,6 +43,7 @@ export default function Home() {
       <div className="brochure-book">
         <BrochurePages />
       </div>
+      <BackToTop />
     </main>
   );
 }
