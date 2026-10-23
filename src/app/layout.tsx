@@ -1,21 +1,40 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono, Playfair_Display } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Cinzel, Caladea, Great_Vibes, Geist } from "next/font/google";
 import "./globals.css";
 
+const cinzel = Cinzel({
+  variable: "--font-cinzel",
+  subsets: ["latin"],
+  weight: ["400", "600", "700"],
+  display: "swap",
+});
+
+const caladea = Caladea({
+  variable: "--font-caladea",
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  display: "swap",
+});
+
+const greatVibes = Great_Vibes({
+  variable: "--font-script",
+  subsets: ["latin"],
+  weight: ["400"],
+  display: "swap",
+});
+
 const geistSans = Geist({
-  variable: "--font-geist-sans",
+  variable: "--font-sans",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-const playfair = Playfair_Display({
-  variable: "--font-serif",
-  subsets: ["latin"],
-});
+export const viewport: Viewport = {
+  themeColor: "#050505",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(
@@ -23,29 +42,36 @@ export const metadata: Metadata = {
   ),
   title: "In Loving Memory of Ex-WO1 Emmanuel Kofi Kpodogui (1954 - 2026)",
   description:
-    "Forever in our hearts. Celebrating the life of Ex-WO1 Emmanuel Kofi Kpodogui (A. K. A 'AGO DIE').",
+    "Official memorial brochure and celebration of life for Ex-WO1 Emmanuel Kofi Kpodogui (A. K. A 'AGO DIE'). Garrison Methodist and Presbyterian Church, Burma Camp.",
   openGraph: {
     title: "In Loving Memory of Ex-WO1 Emmanuel Kofi Kpodogui (1954 - 2026)",
     description:
-      "Forever in our hearts. Celebrating the life of Ex-WO1 Emmanuel Kofi Kpodogui (A. K. A 'AGO DIE').",
+      "Forever in our hearts. Celebrating the life of Ex-WO1 Emmanuel Kofi Kpodogui (A. K. A 'AGO DIE'). Saturday 24th October, 2026 at Garrison Methodist and Presbyterian Church, Burma Camp.",
     images: [
       {
-        url: "/images/memorial.webp",
-        width: 715,
-        height: 1024,
-        alt: "Memorial announcement for Ex-WO1 Emmanuel Kofi Kpodogui",
+        url: "/images/brochure-cover-hq.webp",
+        width: 1045,
+        height: 1495,
+        alt: "Memorial brochure cover for Ex-WO1 Emmanuel Kofi Kpodogui",
       },
     ],
   },
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} h-full antialiased scroll-smooth`}
+      className={`${cinzel.variable} ${caladea.variable} ${greatVibes.variable} ${geistSans.variable} h-full dark`}
     >
-      <body className="min-h-full flex flex-col bg-black text-zinc-100 selection:bg-amber-600/30 selection:text-amber-200">
+      <body className="min-h-full bg-[#050505] text-[#DEC596] antialiased selection:bg-[#DEC596]/30 selection:text-white">
         {children}
       </body>
     </html>
